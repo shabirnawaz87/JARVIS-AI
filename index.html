@@ -1,1 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050b14">
+    <meta name="description" content="JARVIS AI Assistant - Voice controlled personal AI assistant">
+    <title>JARVIS AI Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+
+    <div class="background-grid"></div>
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">J</div>
+            <div>
+                <h1>JARVIS</h1>
+                <span>AI PERSONAL ASSISTANT</span>
+            </div>
+        </div>
+
+        <div class="system-status">
+            <span class="status-dot"></span>
+            SYSTEM ONLINE
+        </div>
+    </header>
+
+    <main class="container">
+
+        <section class="hero">
+
+            <div class="orb-container">
+                <div class="orb-ring ring1"></div>
+                <div class="orb-ring ring2"></div>
+                <div class="orb-ring ring3"></div>
+
+                <div class="orb">
+                    <div class="orb-core">J</div>
+                </div>
+            </div>
+
+            <h2>Good Evening</h2>
+            <p class="subtitle">I am JARVIS. How may I assist you?</p>
+
+            <div id="listeningStatus" class="listening-status">
+                SYSTEM READY
+            </div>
+
+            <button id="micButton" class="mic-button" aria-label="Activate JARVIS">
+                <span class="mic-icon">🎙</span>
+            </button>
+
+            <p class="mic-help">Tap microphone to speak</p>
+
+        </section>
+
+        <section class="chat-panel">
+
+            <div id="chatMessages" class="chat-messages">
+                <div class="message jarvis-message">
+                    <div class="message-avatar">J</div>
+                    <div class="message-content">
+                        <strong>JARVIS</strong>
+                        <p>Systems online. I am ready for your command.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input
+                    id="commandInput"
+                    type="text"
+                    placeholder="Type a command..."
+                    autocomplete="off"
+                >
+
+                <button id="sendButton" class="send-button">
+                    ➤
+                </button>
+            </div>
+
+        </section>
+
+        <section class="quick-actions">
+
+            <button class="quick-btn" data-command="What time is it?">
+                <span>🕐</span>
+                <small>TIME</small>
+            </button>
+
+            <button class="quick-btn" data-command="Tell me today's date">
+                <span>📅</span>
+                <small>DATE</small>
+            </button>
+
+            <button class="quick-btn" data-command="Search the web">
+                <span>🌐</span>
+                <small>WEB</small>
+            </button>
+
+            <button class="quick-btn" data-command="Tell me about the system">
+                <span>💻</span>
+                <small>SYSTEM</small>
+            </button>
+
+            <button class="quick-btn" data-command="Tell me a joke">
+                <span>😄</span>
+                <small>JOKE</small>
+            </button>
+
+            <button class="quick-btn" data-command="What can you do?">
+                <span>⚡</span>
+                <small>HELP</small>
+            </button>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <span>JARVIS AI v1.0</span>
+        <span>•</span>
+        <span>VOICE ASSISTANT</span>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+  </html>
