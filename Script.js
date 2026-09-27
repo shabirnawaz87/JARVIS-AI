@@ -8,9 +8,9 @@ const quickButtons = document.querySelectorAll(".quick-btn");
 let recognition = null;
 let isListening = false;
 
-// -----------------------------
+// ================================
 // VOICE RECOGNITION
-// -----------------------------
+// ================================
 
 const SpeechRecognition =
     window.SpeechRecognition ||
@@ -24,14 +24,13 @@ if (SpeechRecognition) {
     recognition.interimResults = false;
     recognition.lang = "en-US";
 
-    recognition.onstart = function () {
+    recognition.onstart = () => {
         isListening = true;
-
         micButton.classList.add("listening");
         listeningStatus.textContent = "LISTENING...";
     };
 
-    recognition.onresult = function (event) {
+    recognition.onresult = (event) => {
 
         const transcript =
             event.results[0][0].transcript;
@@ -40,10 +39,12 @@ if (SpeechRecognition) {
 
         addUserMessage(transcript);
 
-        processCommand(transcript);
+        askJarvis(transcript);
     };
 
-    recognition.onerror = function () {
+    recognition.onerror = (event) => {
+
+        console.error("Voice error:", event.error);
 
         listeningStatus.textContent =
             "VOICE ERROR";
@@ -51,7 +52,7 @@ if (SpeechRecognition) {
         stopListening();
     };
 
-    recognition.onend = function () {
+    recognition.onend = () => {
         stopListening();
     };
 
@@ -62,16 +63,16 @@ if (SpeechRecognition) {
 }
 
 
-// -----------------------------
+// ================================
 // MICROPHONE
-// -----------------------------
+// ================================
 
-micButton.addEventListener("click", function () {
+micButton.addEventListener("click", () => {
 
     if (!recognition) {
 
         addJarvisMessage(
-            "Voice recognition is not supported by this browser. Please try Chrome."
+            "Voice recognition is not supported by this browser. Please use Chrome."
         );
 
         return;
@@ -87,6 +88,7 @@ micButton.addEventListener("click", function () {
     }
 });
 
+
 function stopListening() {
 
     isListening = false;
@@ -98,19 +100,14 @@ function stopListening() {
 }
 
 
-// -----------------------------
+// ================================
 // SEND BUTTON
-// -----------------------------
+// ================================
 
-sendButton.addEventListener("click", function () {
-
-    sendCommand();
-});
+sendButton.addEventListener("click", sendCommand);
 
 
-// ENTER KEY
-
-commandInput.addEventListener("keydown", function (event) {
+commandInput.addEventListener("keydown", (event) => {
 
     if (event.key === "Enter") {
 
@@ -118,10 +115,6 @@ commandInput.addEventListener("keydown", function (event) {
     }
 });
 
-
-// -----------------------------
-// SEND COMMAND
-// -----------------------------
 
 function sendCommand() {
 
@@ -134,174 +127,116 @@ function sendCommand() {
 
     commandInput.value = "";
 
-    processCommand(command);
+    askJarvis(command);
 }
 
 
-// -----------------------------
-// PROCESS COMMAND
-// -----------------------------
+// ================================
+// TALK TO GEMINI THROUGH NETLIFY
+// ================================
 
-function processCommand(command) {
+async function askJarvis(message) {
 
-    const text =
-        command.toLowerCase().trim();
+    listeningStatus.textContent =
+        "JARVIS THINKING...";
 
-    let response = "";
+    try {
 
-    if (
-        text.includes("hello") ||
-        text.includes("hi") ||
-        text.includes("hey")
-    ) {
+        const response = await fetch(
+            "/.netlify/functions/chat",
+            {
+                method: "POST",
 
-        response =
-            "Hello. JARVIS systems are online and ready.";
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-    }
-
-    else if (
-        text.includes("time") ||
-        text.includes("what time")
-    ) {
-
-        response =
-            "The current time is " +
-            new Date().toLocaleTimeString();
-
-    }
-
-    else if (
-        text.includes("date") ||
-        text.includes("today")
-    ) {
-
-        response =
-            "Today is " +
-            new Date().toLocaleDateString(
-                undefined,
-                {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric"
-                }
-            );
-
-    }
-
-    else if (
-        text.includes("system") ||
-        text.includes("computer")
-    ) {
-
-        response =
-            "System interface is operational. " +
-            "Browser: " +
-            navigator.userAgent;
-
-    }
-
-    else if (
-        text.includes("joke")
-    ) {
-
-        response =
-            "Why did the computer go to the doctor? " +
-            "Because it had a virus.";
-
-    }
-
-    else if (
-        text.includes("what can you do") ||
-        text.includes("help")
-    ) {
-
-        response =
-            "I can currently respond to commands, " +
-            "tell you the time and date, use voice recognition, " +
-            "speak responses, and provide quick actions. " +
-            "More AI capabilities will be connected next.";
-
-    }
-
-    else if (
-        text.includes("search")
-    ) {
-
-        response =
-            "I can open a web search for you.";
-
-        setTimeout(function () {
-
-            const query =
-                command
-                    .replace(/search/gi, "")
-                    .trim();
-
-            if (query) {
-
-                window.open(
-                    "https://www.google.com/search?q=" +
-                    encodeURIComponent(query),
-                    "_blank"
-                );
+                body: JSON.stringify({
+                    message: message,
+                    provider: "gemini"
+                })
             }
-
-        }, 800);
-
-    }
-
-    else if (
-        text.includes("open youtube")
-    ) {
-
-        response =
-            "Opening YouTube.";
-
-        window.open(
-            "https://youtube.com",
-            "_blank"
         );
 
-    }
+        const data = await response.json();
 
-    else if (
-        text.includes("open google")
-    ) {
+        if (!response.ok || !data.success) {
 
-        response =
-            "Opening Google.";
+            throw new Error(
+                data.error ||
+                "JARVIS backend error"
+            );
+        }
 
-        window.open(
-            "https://google.com",
-            "_blank"
+        const answer =
+            data.answer ||
+            "I could not generate a response.";
+
+        addJarvisMessage(answer);
+
+        speak(answer);
+
+    } catch (error) {
+
+        console.error(error);
+
+        addJarvisMessage(
+            "I couldn't connect to my AI brain. " +
+            "Please check the Netlify function and Gemini API configuration."
         );
 
+    } finally {
+
+        listeningStatus.textContent =
+            "SYSTEM READY";
     }
-
-    else {
-
-        response =
-            "I received your command: " +
-            command +
-            ". My full AI brain will be connected in the next phase.";
-
-    }
-
-    setTimeout(function () {
-
-        addJarvisMessage(response);
-
-        speak(response);
-
-    }, 400);
 }
 
 
-// -----------------------------
-// ADD USER MESSAGE
-// -----------------------------
+// ================================
+// TEXT TO SPEECH
+// ================================
+
+function speak(text) {
+
+    if (!("speechSynthesis" in window)) {
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const speech =
+        new SpeechSynthesisUtterance(text);
+
+    speech.rate = 0.95;
+    speech.pitch = 0.85;
+    speech.volume = 1;
+
+    window.speechSynthesis.speak(speech);
+}
+
+
+// ================================
+// QUICK ACTIONS
+// ================================
+
+quickButtons.forEach((button) => {
+
+    button.addEventListener("click", () => {
+
+        const command =
+            button.dataset.command;
+
+        commandInput.value = command;
+
+        sendCommand();
+    });
+});
+
+
+// ================================
+// CHAT UI
+// ================================
 
 function addUserMessage(text) {
 
@@ -326,10 +261,6 @@ function addUserMessage(text) {
 }
 
 
-// -----------------------------
-// ADD JARVIS MESSAGE
-// -----------------------------
-
 function addJarvisMessage(text) {
 
     const message =
@@ -353,61 +284,12 @@ function addJarvisMessage(text) {
 }
 
 
-// -----------------------------
-// TEXT TO SPEECH
-// -----------------------------
-
-function speak(text) {
-
-    if (!("speechSynthesis" in window)) {
-        return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const speech =
-        new SpeechSynthesisUtterance(text);
-
-    speech.rate = 0.95;
-    speech.pitch = 0.85;
-    speech.volume = 1;
-
-    window.speechSynthesis.speak(speech);
-}
-
-
-// -----------------------------
-// QUICK ACTIONS
-// -----------------------------
-
-quickButtons.forEach(function (button) {
-
-    button.addEventListener("click", function () {
-
-        const command =
-            button.dataset.command;
-
-        commandInput.value = command;
-
-        sendCommand();
-    });
-});
-
-
-// -----------------------------
-// CHAT SCROLL
-// -----------------------------
-
 function scrollChat() {
 
     chatMessages.scrollTop =
         chatMessages.scrollHeight;
 }
 
-
-// -----------------------------
-// SECURITY / HTML ESCAPE
-// -----------------------------
 
 function escapeHTML(text) {
 
@@ -420,14 +302,14 @@ function escapeHTML(text) {
 }
 
 
-// -----------------------------
-// INITIAL STATUS
-// -----------------------------
+// ================================
+// STARTUP
+// ================================
 
-setTimeout(function () {
+setTimeout(() => {
 
-    speak(
-        "JARVIS systems online. How may I assist you?"
+    addJarvisMessage(
+        "Gemini connection ready. I am now waiting for your command."
     );
 
-}, 1200);
+}, 800);
